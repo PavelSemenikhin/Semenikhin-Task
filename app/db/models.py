@@ -19,7 +19,9 @@ class Event(Base):
         default=uuid.uuid4
     )
     occurred_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc),
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
         server_default=func.now()
     )
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)
