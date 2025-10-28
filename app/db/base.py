@@ -10,6 +10,7 @@ DATABASE_ASYNC_URL = (
     f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 )
 
+SYNC_URL = DATABASE_ASYNC_URL.replace("+asyncpg", "")
 
 postgresql_engine = create_async_engine(DATABASE_ASYNC_URL, echo=False)
 
