@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Integer, DateTime, func, String, JSON
+from sqlalchemy import Integer, DateTime, func, String, JSON, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
 
@@ -11,7 +11,10 @@ class Base(DeclarativeBase):
 
 class Event(Base):
     __tablename__ = "events"
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = (
+        UniqueConstraint("event_id", name="uq_event_event_id"),
+        {"extend_existing": True},
+    )
 
     event_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
