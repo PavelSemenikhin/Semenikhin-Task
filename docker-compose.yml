@@ -14,6 +14,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  nats:
+    image: nats:latest
+    container_name: nats_broker
+    restart: always
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command:
+      - "-js"
+      - "--store_dir"
+      - "/data/jetstream"
+      - "--http_port"
+      - "8222"
+      - "--debug"
+    volumes:
+      - nats_data:/data/jetstream
+
   app:
     build: .
     container_name: event_app
@@ -22,11 +39,24 @@ services:
       - .env
     depends_on:
       - db
+      - nats
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     volumes:
       - .:/app
 
+  worker:
+    build: .
+    container_name: event_worker
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - nats
+    command: python -m app.workers.ingest_worker
+
 volumes:
   postgres_data:
+  nats_data:
