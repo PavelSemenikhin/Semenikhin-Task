@@ -34,7 +34,7 @@ async def get_dau(
             func.date(Event.occurred_at).label("date"),
             func.count(distinct(Event.user_id)).label("dau")
         )
-        .where(Event.occurred_at.between(from_date, to_date))
+        .where(func.date(Event.occurred_at).between(from_date, to_date))
         .group_by(func.date(Event.occurred_at))
         .order_by(func.date(Event.occurred_at))
     )
