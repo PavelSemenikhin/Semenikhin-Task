@@ -19,40 +19,37 @@ async def events_ingestion(
         payload: EventBatch,
         db: AsyncSession = Depends(get_db),
 ):
-    inserted = 0
-    skipped = 0
+    event_ids = [e.event_id for e in payload.events]
 
+    stmt = select(Event.event_id).where(Event.event_id.in_(event_ids))
+    result = await db.execute(stmt)
+    existing_ids = {row[0] for row in result.all()}
+
+    new_events = []
     for event in payload.events:
-        stmt = select(Event).where(Event.event_id == event.event_id)
-        result = await db.execute(stmt)
-        existing_event = result.scalar_one_or_none()
-
-        if existing_event:
-            skipped += 1
+        if event.event_id in existing_ids:
             continue
 
-        new_event = Event(
+        new_events.append(Event(
             event_id=event.event_id,
             occurred_at=event.occurred_at,
             user_id=event.user_id,
             event_type=event.event_type,
             properties=event.properties,
-        )
+        ))
 
-        db.add(new_event)
-        inserted += 1
-
+    db.add_all(new_events)
     try:
         await db.commit()
     except IntegrityError:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database integrity error during ingestion",
+            detail="Database integrity error during ingestion",
         )
 
     return {
-        "inserted": inserted,
-        "skipped": skipped,
-        "total": inserted + skipped,
+        "inserted": len(new_events),
+        "skipped": len(existing_ids),
+        "total": len(payload.events),
     }
