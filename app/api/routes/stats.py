@@ -97,9 +97,9 @@ async def get_top_event_type(
     description="Get retention events",
 )
 async def get_retention(
-    start_date: date,
-    windows: int = 3,
-    db: AsyncSession = Depends(get_db),
+        start_date: date,
+        windows: int = 3,
+        db: AsyncSession = Depends(get_db),
 ):
     first_seen_subquery = (
         select(
