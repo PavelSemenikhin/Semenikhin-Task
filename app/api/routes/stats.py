@@ -156,3 +156,14 @@ async def get_retention(
         )
 
     return response
+
+
+@router.get("/count/")
+async def get_events(db: AsyncSession = Depends(get_db)):
+    stmt = select(Event).order_by(Event.event_id)
+    result = await db.execute(stmt)
+    count = result.scalars().all()
+    count_of_events = len(count)
+    return {
+        "count": count_of_events,
+    }
