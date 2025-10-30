@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import inspect
 
+
 @pytest.mark.asyncio
 async def test_event_id_unique_index(test_engine):
     async with test_engine.begin() as conn:
@@ -12,8 +13,8 @@ async def test_event_id_unique_index(test_engine):
             unique_indexes = [i for i in indexes if i.get("unique")]
             unique_constraints = [c for c in constraints if "event_id" in c.get("column_names", [])]
             return (
-                any("event_id" in i["column_names"] for i in unique_indexes)
-                or bool(unique_constraints)
+                    any("event_id" in i["column_names"] for i in unique_indexes)
+                    or bool(unique_constraints)
             )
 
         result = await conn.run_sync(check_index)
