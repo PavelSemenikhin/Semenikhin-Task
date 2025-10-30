@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from datetime import date
 
-from sqlalchemy import select, func, distinct
+from sqlalchemy import select, func, distinct, cast, String
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.stats import DAUItem, TopEventItem, RetentionEventItem
@@ -15,12 +15,13 @@ router = APIRouter(prefix="/stats", tags=["Stats"])
     "/dau/",
     response_model=list[DAUItem],
     status_code=status.HTTP_200_OK,
+    summary="Daily Active Users (DAU)",
     description="Get DAU stats",
-
 )
 async def get_dau(
-        from_date: date,
-        to_date: date,
+        from_date: date = Query(example="2025-01-01"),
+        to_date: date = Query(example="2025-12-31"),
+        segment: str | None = Query(None, example="purchase"),
         db: AsyncSession = Depends(get_db)
 ):
     if from_date > to_date:
@@ -35,12 +36,16 @@ async def get_dau(
             func.count(distinct(Event.user_id)).label("dau")
         )
         .where(func.date(Event.occurred_at).between(from_date, to_date))
-        .group_by(func.date(Event.occurred_at))
-        .order_by(func.date(Event.occurred_at))
     )
+
+    if segment:
+        stmt = stmt.where(Event.event_type == segment)
+
+    stmt = stmt.group_by(func.date(Event.occurred_at)).order_by(func.date(Event.occurred_at))
 
     result = await db.execute(stmt)
     rows = result.mappings().all()
+
     if not rows:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
