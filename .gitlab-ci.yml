@@ -10,8 +10,9 @@ variables:
 stages:
   - build
   - test
-  - deploy
   - review
+  - deploy
+  - cleanup
 
 flake8:
   stage: test
