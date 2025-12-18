@@ -1,6 +1,9 @@
 include:
   - template: Auto-DevOps.gitlab-ci.yml
 
+stages:
+  - test
+
 flake8:
   stage: test
   image: python:3.12-slim
