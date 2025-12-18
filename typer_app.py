@@ -52,7 +52,9 @@ async def import_to_db(parsed_rows: list[dict]):
             except Exception as e:
                 await session.rollback()
                 typer.echo(f"Unexpected DB error: {e}")
-        typer.echo(f"Done. Inserted: {inserted}, Skipped (duplicates): {skipped}")
+        typer.echo(
+            f"Done. Inserted: {inserted}, Skipped (duplicates): {skipped}",
+        )
 
 
 @cli.command("events")
