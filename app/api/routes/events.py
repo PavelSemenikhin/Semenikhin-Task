@@ -11,10 +11,10 @@ router = APIRouter(prefix="/events", tags=["Events"])
     "/ingest/",
     status_code=status.HTTP_202_ACCEPTED,
     description="Publish events to NATS for async ingestion",
-    dependencies=[Depends(rate_limiter)]
+    dependencies=[Depends(rate_limiter)],
 )
 async def events_ingestion(
-        payload: EventBatch,
+    payload: EventBatch,
 ):
     published = 0
 
@@ -22,7 +22,4 @@ async def events_ingestion(
         await publish("events.ingest", event.model_dump_json())
         published += 1
 
-    return {
-        "published": published,
-        "status": "queued"
-    }
+    return {"published": published, "status": "queued"}

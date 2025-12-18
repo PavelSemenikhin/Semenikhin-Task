@@ -28,7 +28,6 @@ async def db_session(test_engine):
         yield session
 
 
-
 @pytest.fixture(scope="function", autouse=True)
 async def override_base_dependencies(db_session, test_engine):
 

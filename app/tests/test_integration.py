@@ -11,7 +11,7 @@ async def test_idempotent_insert(client):
         "occurred_at": "2025-10-28T10:00:00Z",
         "user_id": 1,
         "event_type": "login",
-        "properties": {"country": "UA"}
+        "properties": {"country": "UA"},
     }
 
     payload = {"events": [event]}

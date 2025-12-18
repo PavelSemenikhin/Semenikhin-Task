@@ -16,7 +16,7 @@ async def rate_limiter(request: Request):
     if len(timestamps) >= RATE_LIMIT:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Rate limit exceeded. Try again after {WINDOW} seconds."
+            detail=f"Rate limit exceeded. Try again after {WINDOW} seconds.",
         )
 
     timestamps.append(now)

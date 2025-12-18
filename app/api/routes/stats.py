@@ -19,38 +19,34 @@ router = APIRouter(prefix="/stats", tags=["Stats"])
     description="Get DAU stats",
 )
 async def get_dau(
-        from_date: date = Query(example="2025-01-01"),
-        to_date: date = Query(example="2025-12-31"),
-        segment: str | None = Query(None, example="purchase"),
-        db: AsyncSession = Depends(get_db)
+    from_date: date = Query(example="2025-01-01"),
+    to_date: date = Query(example="2025-12-31"),
+    segment: str | None = Query(None, example="purchase"),
+    db: AsyncSession = Depends(get_db),
 ):
     if from_date > to_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{from_date} cannot be after {to_date}"
+            detail=f"{from_date} cannot be after {to_date}",
         )
 
-    stmt = (
-        select(
-            func.date(Event.occurred_at).label("date"),
-            func.count(distinct(Event.user_id)).label("dau")
-        )
-        .where(func.date(Event.occurred_at).between(from_date, to_date))
-    )
+    stmt = select(
+        func.date(Event.occurred_at).label("date"),
+        func.count(distinct(Event.user_id)).label("dau"),
+    ).where(func.date(Event.occurred_at).between(from_date, to_date))
 
     if segment:
         stmt = stmt.where(Event.event_type == segment)
 
-    stmt = stmt.group_by(func.date(Event.occurred_at)).order_by(func.date(Event.occurred_at))
+    stmt = stmt.group_by(func.date(Event.occurred_at)).order_by(
+        func.date(Event.occurred_at)
+    )
 
     result = await db.execute(stmt)
     rows = result.mappings().all()
 
     if not rows:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
     return [DAUItem(**row) for row in rows]
 
@@ -62,35 +58,30 @@ async def get_dau(
     description="Get top event types",
 )
 async def get_top_event_type(
-        from_date: date,
-        to_date: date,
-        limit: int = 10,
-        db: AsyncSession = Depends(get_db),
+    from_date: date,
+    to_date: date,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db),
 ):
     if from_date > to_date:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{from_date} cannot be after {to_date}"
+            detail=f"{from_date} cannot be after {to_date}",
         )
 
     stmt = (
-        select(
-            Event.event_type,
-            func.count().label("count")
-        )
+        select(Event.event_type, func.count().label("count"))
         .where(Event.occurred_at.between(from_date, to_date))
         .group_by(Event.event_type)
         .order_by(func.count().desc())
-        .limit(limit))
+        .limit(limit)
+    )
 
     result = await db.execute(stmt)
     rows = result.mappings().all()
 
     if not rows:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
     return [TopEventItem(**row) for row in rows]
 
@@ -102,14 +93,13 @@ async def get_top_event_type(
     description="Get retention events",
 )
 async def get_retention(
-        start_date: date,
-        windows: int = 3,
-        db: AsyncSession = Depends(get_db),
+    start_date: date,
+    windows: int = 3,
+    db: AsyncSession = Depends(get_db),
 ):
     first_seen_subquery = (
         select(
-            Event.user_id,
-            func.min(func.date(Event.occurred_at)).label("first_seen")
+            Event.user_id, func.min(func.date(Event.occurred_at)).label("first_seen")
         )
         .group_by(Event.user_id)
         .subquery()
@@ -118,7 +108,9 @@ async def get_retention(
     stmt = (
         select(
             first_seen_subquery.c.first_seen.label("cohort_date"),
-            func.date_part("day", Event.occurred_at - first_seen_subquery.c.first_seen).label("day_number"),
+            func.date_part(
+                "day", Event.occurred_at - first_seen_subquery.c.first_seen
+            ).label("day_number"),
             func.count(func.distinct(Event.user_id)).label("users"),
         )
         .join(first_seen_subquery, Event.user_id == first_seen_subquery.c.user_id)
@@ -156,7 +148,7 @@ async def get_retention(
             RetentionEventItem(
                 cohort_date=cohort_date,
                 total_users=total_users,
-                retention_rate=retention_rate
+                retention_rate=retention_rate,
             )
         )
 
