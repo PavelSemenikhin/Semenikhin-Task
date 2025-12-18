@@ -10,8 +10,8 @@ from app.core.config import settings
 
 
 DATABASE_ASYNC_URL = (
-    f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@" # noqa
-    f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}" # noqa
+    f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@"  # noqa
+    f"{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"  # noqa
 )
 
 SYNC_URL = DATABASE_ASYNC_URL.replace("+asyncpg", "")

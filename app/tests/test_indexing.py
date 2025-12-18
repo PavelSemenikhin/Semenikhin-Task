@@ -21,9 +21,9 @@ async def test_event_id_unique_index(test_engine):
                     [],
                 )
             ]
-            return any("event_id"
-                       in i["column_names"]
-                       for i in unique_indexes) or bool(
+            return any(
+                "event_id" in i["column_names"] for i in unique_indexes
+            ) or bool(  # noqa
                 unique_constraints
             )
 

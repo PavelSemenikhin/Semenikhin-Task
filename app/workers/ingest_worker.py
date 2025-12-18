@@ -51,7 +51,9 @@ async def handle_event(payload):
         await session.rollback()
         logger.warning("Skipped duplicate or invalid events batch")
     except Exception as e:
-        logger.exception(f"Failed to insert events batch: {payload} | Error: {e}") # noqa
+        logger.exception(
+            f"Failed to insert events batch: {payload} | Error: {e}"
+        )  # noqa
 
 
 async def main():
