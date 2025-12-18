@@ -25,7 +25,12 @@ async def handle_event(payload):
         async with AsyncPostgresqlSessionLocal() as session:
             for e in events:
                 occurred_at = (
-                    datetime.fromisoformat(e["occurred_at"].replace("Z", "+00:00"))
+                    datetime.fromisoformat(
+                        e["occurred_at"].replace(
+                            "Z",
+                            "+00:00",
+                        )
+                    )
                     if isinstance(e["occurred_at"], str)
                     else e["occurred_at"]
                 )
@@ -46,7 +51,7 @@ async def handle_event(payload):
         await session.rollback()
         logger.warning("Skipped duplicate or invalid events batch")
     except Exception as e:
-        logger.exception(f"Failed to insert events batch: {payload} | Error: {e}")
+        logger.exception(f"Failed to insert events batch: {payload} | Error: {e}") # noqa
 
 
 async def main():

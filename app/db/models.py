@@ -27,4 +27,8 @@ class Event(Base):
     )
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)
     event_type: Mapped[str] = mapped_column(String, nullable=False)
-    properties: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    properties: Mapped[dict] = mapped_column(
+        JSON,
+        nullable=False,
+        default=dict,
+    )

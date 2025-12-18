@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 from nats.aio.client import Client as NATS
@@ -61,7 +60,7 @@ async def subscribe(subject: str, handler) -> None:
 
 
 async def close_nats():
-    global nc
+    global nc # noqa
     if nc and nc.is_connected:
         await nc.drain()
         logger.info("NATS connection closed")

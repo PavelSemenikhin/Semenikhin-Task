@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from datetime import date
 
-from sqlalchemy import select, func, distinct, cast, String
+from sqlalchemy import select, func, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.stats import DAUItem, TopEventItem, RetentionEventItem
@@ -46,7 +46,10 @@ async def get_dau(
     rows = result.mappings().all()
 
     if not rows:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Not found",
+        )
 
     return [DAUItem(**row) for row in rows]
 
@@ -81,7 +84,10 @@ async def get_top_event_type(
     rows = result.mappings().all()
 
     if not rows:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Not found",
+        )
 
     return [TopEventItem(**row) for row in rows]
 
@@ -99,7 +105,10 @@ async def get_retention(
 ):
     first_seen_subquery = (
         select(
-            Event.user_id, func.min(func.date(Event.occurred_at)).label("first_seen")
+            Event.user_id,
+            func.min(func.date(Event.occurred_at)).label(
+                "first_seen",
+            ),
         )
         .group_by(Event.user_id)
         .subquery()
@@ -113,7 +122,10 @@ async def get_retention(
             ).label("day_number"),
             func.count(func.distinct(Event.user_id)).label("users"),
         )
-        .join(first_seen_subquery, Event.user_id == first_seen_subquery.c.user_id)
+        .join(
+            first_seen_subquery,
+            Event.user_id == first_seen_subquery.c.user_id,
+        )
         .where(first_seen_subquery.c.first_seen >= start_date)
         .group_by(first_seen_subquery.c.first_seen, "day_number")
         .order_by(first_seen_subquery.c.first_seen, "day_number")
