@@ -1,6 +1,11 @@
 include:
   - template: Auto-DevOps.gitlab-ci.yml
 
+variables:
+  AUTO_DEVOPS_BUILD_DISABLED: "true"
+  AUTO_DEVOPS_DEPLOY_DISABLED: "true"
+  AUTO_DEVOPS_REVIEW_DISABLED: "true"
+
 
 stages:
   - build
