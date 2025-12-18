@@ -1,5 +1,10 @@
 include:
   - template: Auto-DevOps.gitlab-ci.yml
 
-#variables:
-#  DOCKER_API_VERSION: "1.41"
+variables:
+  # Активуємо CNB (тепер це обов'язково)
+  AUTO_DEVOPS_BUILD_IMAGE_CNB_ENABLED: "true"
+  # Використовуємо стабільну версію Docker, яка точно розуміє buildpacks
+  DOCKER_DIND_IMAGE: "docker:24.0.9-dind"
+  # Жорстко обмежуємо версію API для клієнта і сервера
+  DOCKER_API_VERSION: "1.41"
