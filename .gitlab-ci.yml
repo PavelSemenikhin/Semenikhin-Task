@@ -3,8 +3,9 @@ include:
 
 
 stages:
+  - build
   - test
-
+  - deploy
 
 flake8:
   stage: test
