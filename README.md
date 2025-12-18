@@ -168,7 +168,7 @@ Dockerfile
 .gitignore
 alembic.ini
 ADR.md
-LEARNED.md  
+LEARNED.md   
 ```
 
 ---
