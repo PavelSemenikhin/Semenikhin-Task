@@ -2,8 +2,21 @@ include:
   - template: Auto-DevOps.gitlab-ci.yml
 
 stages:
+  - build
   - lint
   - test
+  - deploy
+  - review
+  - dast
+  - staging
+  - canary
+  - production
+  - incremental_rollout_10
+  - incremental_rollout_25
+  - incremental_rollout_50
+  - incremental_rollout_100
+  - performance
+  - cleanup
 
 flake8:
   stage: lint
