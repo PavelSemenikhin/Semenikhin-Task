@@ -1,8 +1,12 @@
 include:
   - template: Auto-DevOps.gitlab-ci.yml
 
+stages:
+  - lint
+  - test
+
 flake8:
-  stage: test
+  stage: lint
   image: python:3.12-slim
   variables:
     POETRY_VIRTUALENVS_CREATE: "false"
@@ -12,7 +16,7 @@ flake8:
     - poetry run flake8 .
 
 black:
-  stage: test
+  stage: lint
   image: python:3.12-slim
   variables:
     POETRY_VIRTUALENVS_CREATE: "false"
