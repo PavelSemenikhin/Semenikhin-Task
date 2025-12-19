@@ -27,7 +27,7 @@ tests:
   stage: test
   image: python:3.12-slim
   needs:
-    - ["build_job", "black", "flake8"]
+    - ["build", "black", "flake8"]
 
   services:
     - name: postgres:15
