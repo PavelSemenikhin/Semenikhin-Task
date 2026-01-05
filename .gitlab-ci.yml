@@ -1,5 +1,6 @@
 include:
   - template: Auto-DevOps.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
 
 
 flake8:
