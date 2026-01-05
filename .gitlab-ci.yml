@@ -26,9 +26,7 @@ black:
 
 container_scan_gate:
   stage: test
-  image:
-    name: aquasec/trivy:0.67.2
-    entrypoint: [""]
+  image: aquasec/trivy:0.67.2
   services:
     - docker:26.1.3-dind
   variables:
@@ -36,7 +34,7 @@ container_scan_gate:
     DOCKER_TLS_CERTDIR: ""
     TRIVY_NO_PROGRESS: "true"
   script:
-  - trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+    - trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
   needs:
     - build
   allow_failure: false
