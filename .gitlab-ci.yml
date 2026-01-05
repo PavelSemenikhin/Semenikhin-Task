@@ -36,11 +36,7 @@ container_scan_gate:
     DOCKER_TLS_CERTDIR: ""
     TRIVY_NO_PROGRESS: "true"
   script:
-    - trivy image \
-        --severity HIGH,CRITICAL \
-        --ignore-unfixed \
-        --exit-code 1 \
-        $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+  - trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
   needs:
     - build
   allow_failure: false
