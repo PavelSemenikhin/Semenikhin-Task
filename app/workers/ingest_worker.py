@@ -26,9 +26,7 @@ async def handle_event(payload):
         for e in events:
             try:
                 occurred_at = (
-                    datetime.fromisoformat(
-                        e["occurred_at"].replace("Z", "+00:00")
-                    )
+                    datetime.fromisoformat(e["occurred_at"].replace("Z", "+00:00"))
                     if isinstance(e["occurred_at"], str)
                     else e["occurred_at"]
                 )
@@ -48,9 +46,7 @@ async def handle_event(payload):
                 if result.rowcount:
                     inserted += result.rowcount
             except Exception as exc:
-                logger.exception(
-                    f"Failed to insert event: {e} | Error: {exc}"
-                )  # noqa
+                logger.exception(f"Failed to insert event: {e} | Error: {exc}")  # noqa
 
         await session.commit()
         logger.info(f"Inserted {inserted} events from NATS")
