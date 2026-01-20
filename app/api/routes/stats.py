@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from datetime import date
+from datetime import date, datetime, time, timedelta
 
 from sqlalchemy import select, func, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +19,8 @@ router = APIRouter(prefix="/stats", tags=["Stats"])
     description="Get DAU stats",
 )
 async def get_dau(
-    from_date: date = Query(example="2025-01-01"),
-    to_date: date = Query(example="2025-12-31"),
+    from_date: date = Query(..., alias="from", example="2025-01-01"),
+    to_date: date = Query(..., alias="to", example="2025-12-31"),
     segment: str | None = Query(None, example="purchase"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -30,10 +30,13 @@ async def get_dau(
             detail=f"{from_date} cannot be after {to_date}",
         )
 
+    start_dt = datetime.combine(from_date, time.min)
+    end_dt = datetime.combine(to_date + timedelta(days=1), time.min)
+
     stmt = select(
         func.date(Event.occurred_at).label("date"),
         func.count(distinct(Event.user_id)).label("dau"),
-    ).where(func.date(Event.occurred_at).between(from_date, to_date))
+    ).where(Event.occurred_at >= start_dt, Event.occurred_at < end_dt)
 
     if segment:
         stmt = stmt.where(Event.event_type == segment)
@@ -55,14 +58,20 @@ async def get_dau(
 
 
 @router.get(
+    "/top-events/",
+    response_model=list[TopEventItem],
+    status_code=status.HTTP_200_OK,
+    description="Get top event types",
+)
+@router.get(
     "/top_event/",
     response_model=list[TopEventItem],
     status_code=status.HTTP_200_OK,
     description="Get top event types",
 )
 async def get_top_event_type(
-    from_date: date,
-    to_date: date,
+    from_date: date = Query(..., alias="from"),
+    to_date: date = Query(..., alias="to"),
     limit: int = 10,
     db: AsyncSession = Depends(get_db),
 ):
@@ -72,9 +81,12 @@ async def get_top_event_type(
             detail=f"{from_date} cannot be after {to_date}",
         )
 
+    start_dt = datetime.combine(from_date, time.min)
+    end_dt = datetime.combine(to_date + timedelta(days=1), time.min)
+
     stmt = (
         select(Event.event_type, func.count().label("count"))
-        .where(Event.occurred_at.between(from_date, to_date))
+        .where(Event.occurred_at >= start_dt, Event.occurred_at < end_dt)
         .group_by(Event.event_type)
         .order_by(func.count().desc())
         .limit(limit)

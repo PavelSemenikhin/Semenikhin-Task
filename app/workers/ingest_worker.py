@@ -2,10 +2,10 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.dialects.postgresql import insert
 
 from app.core.nats_client import connect_nats, subscribe, close_nats
-from app.db.base import AsyncPostgresqlSessionLocal
+from app.db.base import AsyncPostgresqlSessionLocal, init_db
 from app.db.models import Event
 
 logging.basicConfig(
@@ -16,48 +16,49 @@ logger = logging.getLogger(__name__)
 
 
 async def handle_event(payload):
-    try:
-        if isinstance(payload, str):
-            payload = json.loads(payload)
+    if isinstance(payload, str):
+        payload = json.loads(payload)
 
-        events = payload.get("events", [payload])
+    events = payload.get("events", [payload])
 
-        async with AsyncPostgresqlSessionLocal() as session:
-            for e in events:
+    inserted = 0
+    async with AsyncPostgresqlSessionLocal() as session:
+        for e in events:
+            try:
                 occurred_at = (
                     datetime.fromisoformat(
-                        e["occurred_at"].replace(
-                            "Z",
-                            "+00:00",
-                        )
+                        e["occurred_at"].replace("Z", "+00:00")
                     )
                     if isinstance(e["occurred_at"], str)
                     else e["occurred_at"]
                 )
 
-                event = Event(
-                    event_id=e["event_id"],
-                    occurred_at=occurred_at,
-                    user_id=e["user_id"],
-                    event_type=e["event_type"],
-                    properties=e.get("properties", {}),
+                stmt = (
+                    insert(Event)
+                    .values(
+                        event_id=e["event_id"],
+                        occurred_at=occurred_at,
+                        user_id=e["user_id"],
+                        event_type=e["event_type"],
+                        properties=e.get("properties", {}),
+                    )
+                    .on_conflict_do_nothing(index_elements=["event_id"])
                 )
-                session.add(event)
+                result = await session.execute(stmt)
+                if result.rowcount:
+                    inserted += result.rowcount
+            except Exception as exc:
+                logger.exception(
+                    f"Failed to insert event: {e} | Error: {exc}"
+                )  # noqa
 
-            await session.commit()
-            logger.info(f"Inserted {len(events)} events from NATS")
-
-    except IntegrityError:
-        await session.rollback()
-        logger.warning("Skipped duplicate or invalid events batch")
-    except Exception as e:
-        logger.exception(
-            f"Failed to insert events batch: {payload} | Error: {e}"
-        )  # noqa
+        await session.commit()
+        logger.info(f"Inserted {inserted} events from NATS")
 
 
 async def main():
     logger.info("Starting ingest worker...")
+    await init_db()
     await connect_nats()
     await subscribe("events.ingest", handle_event)
 

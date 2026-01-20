@@ -15,6 +15,9 @@ async def connect_nats() -> NATS:
     if nc and nc.is_connected:
         return nc
 
+    if not settings.NATS_URL:
+        raise RuntimeError("NATS_URL is not configured")
+
     try:
         nc = NATS()
         await nc.connect(servers=[settings.NATS_URL])

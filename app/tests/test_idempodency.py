@@ -1,6 +1,5 @@
 import uuid
 import pytest
-import asyncio
 
 
 @pytest.mark.asyncio
@@ -13,14 +12,12 @@ async def test_idempotent_insert(client):
         "properties": {"country": "UA"},
     }
 
-    payload = {"events": [event]}
+    payload = [event]
 
-    r1 = await client.post("/events/ingest/", json=payload)
+    r1 = await client.post("/events", json=payload)
     assert r1.status_code == 202
     assert r1.json() == {"published": 1, "status": "queued"}
 
-    await asyncio.sleep(2)
-
-    r2 = await client.post("/events/ingest/", json=payload)
+    r2 = await client.post("/events", json=payload)
     assert r2.status_code == 202
     assert r2.json() == {"published": 1, "status": "queued"}
