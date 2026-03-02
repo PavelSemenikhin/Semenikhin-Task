@@ -57,6 +57,55 @@ services:
       - nats
     command: python -m app.workers.ingest_worker
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: event_prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
+
+  loki:
+    image: grafana/loki:2.9.7
+    container_name: event_loki
+    restart: always
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: event_grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+
 volumes:
   postgres_data:
   nats_data:
+  prometheus_data:
+  loki_data:
+  loki_wal_data:
+  grafana_data:
